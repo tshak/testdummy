@@ -34,6 +34,8 @@ func main() {
 
 	healthy = rc.Healthy
 
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+
 	if rc.HealthyAfterSeconds != nil {
 		healthy = false
 		time.AfterFunc(time.Duration(*rc.HealthyAfterSeconds)*time.Second, func() {
@@ -50,7 +52,7 @@ func main() {
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr:    rc.BindAddress,
-		Handler: mux,
+		Handler: logging(logger)(mux),
 	}
 
 	mux.HandleFunc("/", pingHandler)
@@ -61,8 +63,8 @@ func main() {
 	mux.HandleFunc("/exit", exitHandler)
 	mux.HandleFunc("/env", envHandler)
 
-	log.Printf("TestDummy v%s", versionString)
-	log.Printf("Listening on %s\n", rc.BindAddress)
+	logger.Printf("TestDummy v%s", versionString)
+	logger.Printf("Listening on %s\n", rc.BindAddress)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		ExitIfErr(err, "Unable to start server")
 	}
@@ -141,5 +143,16 @@ func LogIfErr(err error, message string) {
 func ExitIfErr(err error, message string) {
 	if err != nil {
 		log.Fatalf("%s: %s", message, err)
+	}
+}
+
+func logging(logger *log.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				logger.Println(r.Method, r.URL.Path, r.RemoteAddr)
+				next.ServeHTTP(w, r)
+			}()
+		})
 	}
 }
