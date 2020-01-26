@@ -4,7 +4,7 @@ TestDummy is a rudimentary utility service to assist in testing platform schedul
 
 # Usage
 ```
-docker run -it --rm -p 8000:8000 tshak/testdummy:(tag)
+docker run -it --rm -p 8000:8000 tshak/testdummy:latest
 ```
 
 Docker images are hosted on [Docker Hub](https://hub.docker.com/r/tshak/testdummy). See the below sections for additional options.
