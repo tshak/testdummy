@@ -62,6 +62,7 @@ func main() {
 	mux.HandleFunc("/version", versionHandler)
 	mux.HandleFunc("/exit", exitHandler)
 	mux.HandleFunc("/env", envHandler)
+	mux.HandleFunc("/status", statusHandler)
 
 	logger.Printf("TestDummy v%s", versionString)
 	logger.Printf("Listening on %s\n", rc.BindAddress)
@@ -133,6 +134,19 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	_, err := w.Write([]byte(versionString))
 	LogIfErr(err, "Error writing response to /version")
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	status := 400
+	statusParam := r.URL.Query().Get("status")
+	if statusParam != "" {
+		statusParamParsed, err := strconv.ParseInt(statusParam, 10, 32)
+		if err == nil {
+			status = int(statusParamParsed)
+		}
+	}
+
+	w.WriteHeader(status)
 }
 
 func LogIfErr(err error, message string) {

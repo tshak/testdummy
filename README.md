@@ -29,6 +29,7 @@ The following environment variables can be used to configure the service.
 | `/echo` | Returns request body
 | `/env` | Returns all environment variables in the format `NAME=VALUE`, one per line.
 | `/exit?code={exitCode}` | Causes the process to exit with a default exit code of `1`. Use the `code` parameter to customize the exit code.
-| `/health?healthy={true|false}` | Returns an empty HTTP 200 if healthy, otherwise an empty HTTP 500.  The healthy status can be changed using the optional `healthy` query parameter. This status persists for the lifetime of the process. See the [Environment Variables](#environment-variables) section for related options.
-| `/version` | Returns the version of the TestDummy
+| <code>/health?healthy={true&#124;false}</code> | Returns an empty HTTP 200 if healthy, otherwise an empty HTTP 500.  The healthy status can be changed using the optional `healthy` query parameter. This status persists for the lifetime of the process. See the [Environment Variables](#environment-variables) section for related options.
+| `/status?status={statusCode}` | Returns the supplied HTTP status code
+| `/version` | Returns the testdummy version
 
