@@ -89,6 +89,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	if healthyParam != "" {
 		healthyParamParsed, err := strconv.ParseBool(healthyParam)
 		if err == nil {
+			log.Printf("Setting healthy to: %v", healthyParamParsed)
 			healthy = healthyParamParsed
 		}
 	}
