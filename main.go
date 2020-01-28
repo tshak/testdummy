@@ -21,10 +21,11 @@ const envPrefix = "TESTDUMMY"
 const terminationLogPath = "/dev/termination-log"
 
 type RuntimeConfig struct {
-	Healthy             bool   `default:"true"`
-	HealthyAfterSeconds *int   `split_words:"true"`
-	BindAddress         string `split_words:"true" default:"localhost:8000"`
-	PanicSeconds        *int   `split_words:"true"`
+	Healthy              bool   `default:"true"`
+	HealthyAfterSeconds  *int   `split_words:"true"`
+	BindAddress          string `split_words:"true" default:"localhost:8000"`
+	PanicSeconds         *int   `split_words:"true"`
+	EnableRequestLogging bool   `split_words:"true" default:"false"`
 }
 
 func main() {
@@ -52,7 +53,7 @@ func main() {
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr:    rc.BindAddress,
-		Handler: logging(logger)(mux),
+		Handler: logging(rc, logger)(mux),
 	}
 
 	mux.HandleFunc("/", pingHandler)
@@ -161,11 +162,13 @@ func ExitIfErr(err error, message string) {
 	}
 }
 
-func logging(logger *log.Logger) func(http.Handler) http.Handler {
+func logging(rc RuntimeConfig, logger *log.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
-				logger.Println(r.Method, r.URL.Path, r.RemoteAddr)
+				if rc.EnableRequestLogging {
+					logger.Println(r.Method, r.URL.Path, r.RemoteAddr)
+				}
 				next.ServeHTTP(w, r)
 			}()
 		})
