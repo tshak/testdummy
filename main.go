@@ -26,6 +26,7 @@ type RuntimeConfig struct {
 	BindAddress          string `split_words:"true" default:"localhost:8000"`
 	PanicSeconds         *int   `split_words:"true"`
 	EnableRequestLogging bool   `split_words:"true" default:"false"`
+	EnableEnv            bool   `split_words:"true" default:"false"`
 }
 
 func main() {
@@ -62,8 +63,10 @@ func main() {
 	mux.HandleFunc("/health", healthHandler)
 	mux.HandleFunc("/version", versionHandler)
 	mux.HandleFunc("/exit", exitHandler)
-	mux.HandleFunc("/env", envHandler)
 	mux.HandleFunc("/status", statusHandler)
+	if rc.EnableEnv {
+		mux.HandleFunc("/env", envHandler)
+	}
 
 	logger.Printf("TestDummy v%s", versionString)
 	logger.Printf("Listening on %s\n", rc.BindAddress)

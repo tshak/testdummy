@@ -20,6 +20,7 @@ The following environment variables can be used to configure the service.
 | `TESTDUMMY_HEALTHY_AFTER_SECONDS` | | When set, sets the health status to `false` (regardless of `TESTDUMMY_HEALTHY`) until the specified number of seconds. This is useful for testing post deployment "warmup" scenarios.
 | `TESTDUMMY_PANIC_SECONDS` | | When set, specifies the number of seconds to wait before panicking. This is useful for testing crash recovery scenarios.
 | `TESTDUMMY_ENABLE_REQUEST_LOGGING` | `false` | Logs all requests to stdout
+| `TESTDUMMY_ENABLE_ENV` | `false` | Enable the `/env` endpoint which dumps env vars. :warning: This can be a security risk so enable with caution
 
 
 ## API
