@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -27,6 +28,7 @@ type RuntimeConfig struct {
 	PanicSeconds         *int   `split_words:"true"`
 	EnableRequestLogging bool   `split_words:"true" default:"false"`
 	EnableEnv            bool   `split_words:"true" default:"false"`
+	RootPath             string `split_words:"true" default:"/"`
 }
 
 func main() {
@@ -57,15 +59,19 @@ func main() {
 		Handler: logging(rc, logger)(mux),
 	}
 
-	mux.HandleFunc("/", pingHandler)
-	mux.HandleFunc("/ping", pingHandler)
-	mux.HandleFunc("/echo", echoHandler)
-	mux.HandleFunc("/health", healthHandler)
-	mux.HandleFunc("/version", versionHandler)
-	mux.HandleFunc("/exit", exitHandler)
-	mux.HandleFunc("/status", statusHandler)
+	addRoute := func(path string, handler func(http.ResponseWriter, *http.Request)) {
+		mux.HandleFunc(filepath.Join(rc.RootPath, path), handler)
+	}
+
+	addRoute("", pingHandler)
+	addRoute("ping", pingHandler)
+	addRoute("echo", echoHandler)
+	addRoute("health", healthHandler)
+	addRoute("version", versionHandler)
+	addRoute("exit", exitHandler)
+	addRoute("status", statusHandler)
 	if rc.EnableEnv {
-		mux.HandleFunc("/env", envHandler)
+		addRoute("env", envHandler)
 	}
 
 	logger.Printf("TestDummy v%s", versionString)

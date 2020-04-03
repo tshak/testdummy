@@ -21,6 +21,7 @@ The following environment variables can be used to configure the service.
 | `TESTDUMMY_PANIC_SECONDS` | | When set, specifies the number of seconds to wait before panicking. This is useful for testing crash recovery scenarios.
 | `TESTDUMMY_ENABLE_REQUEST_LOGGING` | `false` | Logs all requests to stdout
 | `TESTDUMMY_ENABLE_ENV` | `false` | Enable the `/env` endpoint which dumps env vars. :warning: This can be a security risk so enable with caution
+| `TESTDUMMY_ROOT_PATH` | `/` | The root path for all routes
 
 
 ## API
