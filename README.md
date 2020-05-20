@@ -22,6 +22,7 @@ The following environment variables can be used to configure the service.
 | `TESTDUMMY_ENABLE_REQUEST_LOGGING` | `false` | Logs all requests to stdout
 | `TESTDUMMY_ENABLE_ENV` | `false` | Enable the `/env` endpoint which dumps env vars. :warning: This can be a security risk so enable with caution
 | `TESTDUMMY_ROOT_PATH` | `/` | The root path for all routes
+| `TESTDUMMY_STRESS_CPU_DURATION` | `0s` | Ping endpoints will perform a naive CPU stress test on all cores for the supplied duration
 
 
 ## API

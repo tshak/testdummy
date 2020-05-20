@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -29,6 +30,7 @@ type RuntimeConfig struct {
 	EnableRequestLogging bool   `split_words:"true" default:"false"`
 	EnableEnv            bool   `split_words:"true" default:"false"`
 	RootPath             string `split_words:"true" default:"/"`
+	StressCpuDuration    string `split_words:"true" default:"0s"`
 }
 
 func main() {
@@ -63,8 +65,11 @@ func main() {
 		mux.HandleFunc(filepath.Join(rc.RootPath, path), handler)
 	}
 
-	addRoute("", pingHandler)
-	addRoute("ping", pingHandler)
+	stressDuration, err := time.ParseDuration(rc.StressCpuDuration)
+	ExitIfErr(err, "Invalid StressCpuDuration")
+
+	addRoute("", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, r, stressDuration) })
+	addRoute("ping", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, r, stressDuration) })
 	addRoute("echo", echoHandler)
 	addRoute("health", healthHandler)
 	addRoute("version", versionHandler)
@@ -89,7 +94,11 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func pingHandler(w http.ResponseWriter, r *http.Request) {
+func pingHandler(w http.ResponseWriter, r *http.Request, stressDuration time.Duration) {
+	if stressDuration > 0 {
+		log.Printf("Stressing CPU for %s", stressDuration)
+		stressCpu(stressDuration)
+	}
 	w.WriteHeader(200)
 	_, err := w.Write([]byte("pong"))
 	LogIfErr(err, "Error writing response to /ping")
@@ -120,6 +129,25 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = w.Write(bodyBytes)
 	LogIfErr(err, "Error writing response to /echo")
+}
+
+func stressCpu(duration time.Duration) {
+	done := make(chan int)
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				default:
+				}
+			}
+		}()
+	}
+
+	time.Sleep(duration)
+	close(done)
 }
 
 func exitHandler(w http.ResponseWriter, r *http.Request) {
