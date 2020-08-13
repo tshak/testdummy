@@ -140,6 +140,7 @@ func stressCpu(duration time.Duration) {
 				select {
 				case <-done:
 					return
+					//SA5004 intentionally ignored
 				default:
 				}
 			}

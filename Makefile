@@ -7,7 +7,7 @@ fmt:
 	go fmt ./...
 
 lint:
-	golangci-lint run
+	golangci-lint run -e SA5004
 
 docker-build: check-version
 	docker build --build-arg VERSION=${VERSION} . -t  testdummy:${VERSION}
