@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"time"
 
@@ -88,7 +89,9 @@ func main() {
 
 func envHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
-	for _, env := range os.Environ() {
+	envSorted := os.Environ()
+	sort.Strings(envSorted)
+	for _, env := range envSorted {
 		_, err := w.Write([]byte(fmt.Sprintf("%s\n", env)))
 		LogIfErr(err, "Error writing response to /env")
 	}
