@@ -80,7 +80,7 @@ func main() {
 		addRoute("env", envHandler)
 	}
 
-	logger.Printf("TestDummy v%s", versionString)
+	logger.Printf("TestDummy %s", versionString)
 	logger.Printf("Listening on %s\n", rc.BindAddress)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		ExitIfErr(err, "Unable to start server")
