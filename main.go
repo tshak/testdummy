@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -52,7 +52,7 @@ func main() {
 
 	if rc.PanicSeconds != nil {
 		time.AfterFunc(time.Duration(*rc.PanicSeconds)*time.Second, func() {
-			panic("Panicing due to TESTDUMMY_PANIC_SECONDS being set")
+			panic("Panicking due to TESTDUMMY_PANIC_SECONDS being set")
 		})
 	}
 
@@ -126,7 +126,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func echoHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(r.Body)
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		bodyBytes = []byte(fmt.Sprintf("Unable to read body: %s", err))
 	}
@@ -166,7 +166,7 @@ func exitHandler(w http.ResponseWriter, r *http.Request) {
 
 	terminationError := errors.New("Fatal error")
 
-	err := ioutil.WriteFile(terminationLogPath, []byte(fmt.Sprintf("%+v", terminationError)), 0666)
+	err := os.WriteFile(terminationLogPath, []byte(fmt.Sprintf("%+v", terminationError)), 0666)
 	LogIfErr(err, "Error writing to termination log")
 
 	os.Exit(exitCode)

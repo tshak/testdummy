@@ -1,26 +1,24 @@
 name: Build
 on: [push]
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ~1.17
-      id: go
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: v1.43.0
-        args: --timeout=5m -e SA5004
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.49.0
+          args: --timeout=1m -e SA5004
 
   release:
     needs: build
@@ -67,4 +65,3 @@ jobs:
           prerelease: true
           body: |
             Docker: `docker pull ghcr.io/${{ env.DOCKER_REPOSITORY }}:${{ steps.get_version.outputs.VERSION }}`
-

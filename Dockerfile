@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as builder
+FROM golang:1.19-alpine as builder
 
 WORKDIR /app
 RUN apk add --update --no-cache ca-certificates git
@@ -12,7 +12,7 @@ COPY . .
 ARG VERSION=0.0.0-docker
 RUN CGO_ENABLED=0 go build -ldflags="-w -s -X 'main.versionString=${VERSION}'" -o /go/bin/testDummy
 
-FROM scratch
+FROM gcr.io/distroless/static
 COPY --from=builder /go/bin/testDummy /go/bin/testDummy
 EXPOSE 8000
 CMD ["/go/bin/testDummy"]
