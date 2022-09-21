@@ -5,15 +5,13 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v2
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
           cache: true
-
-      - name: Check out code
-        uses: actions/checkout@v2
-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
