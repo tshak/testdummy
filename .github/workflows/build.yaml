@@ -8,14 +8,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.49.0
+          version: v1.53.3
           args: --timeout=1m -e SA5004
 
   release:
