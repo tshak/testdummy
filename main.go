@@ -77,6 +77,7 @@ func main() {
 	addRoute("exit", exitHandler)
 	addRoute("status", statusHandler)
 	if rc.EnableEnv {
+		logger.Println("WARNING: /env is enabled. This may expose sensitive information.")
 		addRoute("env", envHandler)
 	}
 
