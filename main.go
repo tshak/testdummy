@@ -26,7 +26,7 @@ const terminationLogPath = "/dev/termination-log"
 type RuntimeConfig struct {
 	Healthy              bool   `default:"true"`
 	HealthyAfterSeconds  *int   `split_words:"true"`
-	BindAddress          string `split_words:"true" default:"localhost:8000"`
+	BindAddress          string `split_words:"true" default:":8000"`
 	PanicSeconds         *int   `split_words:"true"`
 	EnableRequestLogging bool   `split_words:"true" default:"false"`
 	EnableEnv            bool   `split_words:"true" default:"false"`

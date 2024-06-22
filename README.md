@@ -15,7 +15,7 @@ The following environment variables can be used to configure the service.
 
 | Name | Default | Description
 | -| -| -
-| `TESTDUMMY_BIND_ADDRESS` | `localhost:8000` | The address to bind the service to
+| `TESTDUMMY_BIND_ADDRESS` | `:8000` | The address to bind the service to
 | `TESTDUMMY_HEALTHY` | `true` | Boolean. When `true` `/health` returns an HTTP 200 response. When `false` `/health`  returns an empty HTTP 500 response.
 | `TESTDUMMY_HEALTHY_AFTER_SECONDS` | | When set, sets the health status to `false` (regardless of `TESTDUMMY_HEALTHY`) until the specified number of seconds. This is useful for testing post deployment "warmup" scenarios.
 | `TESTDUMMY_PANIC_SECONDS` | | When set, specifies the number of seconds to wait before panicking. This is useful for testing crash recovery scenarios.
