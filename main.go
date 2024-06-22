@@ -14,6 +14,9 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
+
+	"github.com/hellofresh/health-go/v5"
+	healthPg "github.com/hellofresh/health-go/v5/checks/postgres"
 )
 
 // versionString is overwritten using compiler ldflags
@@ -32,6 +35,7 @@ type RuntimeConfig struct {
 	EnableEnv            bool   `split_words:"true" default:"false"`
 	RootPath             string `split_words:"true" default:"/"`
 	StressCpuDuration    string `split_words:"true" default:"0s"`
+	HealthcheckPgDsn     string `split_words:"true"`
 }
 
 func main() {
@@ -62,7 +66,7 @@ func main() {
 		Handler: logging(rc, logger)(mux),
 	}
 
-	addRoute := func(path string, handler func(http.ResponseWriter, *http.Request)) {
+	addRoute := func(path string, handler http.HandlerFunc) {
 		mux.HandleFunc(filepath.Join(rc.RootPath, path), handler)
 	}
 
@@ -73,9 +77,11 @@ func main() {
 	addRoute("ping", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, r, stressDuration) })
 	addRoute("echo", echoHandler)
 	addRoute("health", healthHandler)
+	addRoute("healthcheck", createHealthcheckHandlerFunc(rc))
 	addRoute("version", versionHandler)
 	addRoute("exit", exitHandler)
 	addRoute("status", statusHandler)
+
 	if rc.EnableEnv {
 		logger.Println("WARNING: /env is enabled. This may expose sensitive information.")
 		addRoute("env", envHandler)
@@ -215,4 +221,23 @@ func logging(rc RuntimeConfig, logger *log.Logger) func(http.Handler) http.Handl
 			}()
 		})
 	}
+}
+
+func createHealthcheckHandlerFunc(rc RuntimeConfig) http.HandlerFunc {
+	healthChecker, err := health.New()
+	LogIfErr(err, "Error creating health checker")
+
+	if rc.HealthcheckPgDsn != "" {
+		err = healthChecker.Register(health.Config{
+			Name:      "postgres",
+			Timeout:   time.Second * 2,
+			SkipOnErr: false,
+			Check: healthPg.New(healthPg.Config{
+				DSN: rc.HealthcheckPgDsn,
+			}),
+		})
+		LogIfErr(err, "Error registering Postgres health check")
+	}
+
+	return healthChecker.HandlerFunc
 }
