@@ -19,8 +19,8 @@ The following environment variables can be used to configure the service.
 | `TESTDUMMY_ENABLE_ENV` | `false` | Enable the `/env` endpoint which dumps env vars. :warning: This can be a security risk so enable with caution
 | `TESTDUMMY_ENABLE_REQUEST_LOGGING` | `false` | Logs all requests to stdout
 | `TESTDUMMY_HEALTHY` | `true` | Boolean. When `true` `/health` returns an HTTP 200 response. When `false` `/health`  returns an empty HTTP 500 response.
-| `TESTDUMMY_HEALTHY_AFTER_SECONDS` | | When set, sets the health status to `false` (regardless of `TESTDUMMY_HEALTHY`) until the specified number of seconds. This is useful for testing post deployment "warmup" scenarios.
-| `TESTDUMMY_HEALTHCHECK_PG_DSN` | | When set, adds a healthcheck for the specified Postgres DSN (e.g. postgres://test:test@0.0.0.0:5432/test?sslmode=disable)
+| `TESTDUMMY_HEALTHY_AFTER_SECONDS` | | When set, sets the health status to `false` until the specified number of seconds. This is useful for testing post deployment warmup scenarios. This setting ignores `TESTDUMMY_HEALTHY`.
+| `TESTDUMMY_HEALTHCHECK_PG_DSN` | | When set, adds a health check for the specified Postgres DSN (e.g. postgres://test:test@0.0.0.0:5432/test?sslmode=disable)
 | `TESTDUMMY_PANIC_SECONDS` | | When set, specifies the number of seconds to wait before panicking. This is useful for testing crash recovery scenarios.
 | `TESTDUMMY_ROOT_PATH` | `/` | The root path for all routes
 | `TESTDUMMY_STRESS_CPU_DURATION` | `0s` | Ping endpoints will perform a naive CPU stress test on all cores for the supplied duration
