@@ -7,7 +7,7 @@ fmt:
 	go fmt ./...
 
 lint:
-	golangci-lint run -e SA5004
+	golangci-lint run
 
 docker-run: docker-build
 	docker run -it --rm -p 8000:8000 testdummy

@@ -11,20 +11,18 @@ import (
 )
 
 func Test_PingHandler(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 	w := httptest.NewRecorder()
-	pingHandler(w, req, time.Duration(0))
+	pingHandler(http.ResponseWriter(w), time.Duration(0))
 	resp := w.Result()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func Test_PingHandler_WithDuration(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 	w := httptest.NewRecorder()
 	now := time.Now()
 	workDuration := time.Duration(10 * time.Millisecond)
-	pingHandler(w, req, workDuration)
+	pingHandler(http.ResponseWriter(w), workDuration)
 	resp := w.Result()
 	elapsed := time.Since(now)
 

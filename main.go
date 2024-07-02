@@ -73,8 +73,8 @@ func main() {
 	stressDuration, err := time.ParseDuration(rc.StressCpuDuration)
 	ExitIfErr(err, "Invalid StressCpuDuration")
 
-	addRoute("", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, r, stressDuration) })
-	addRoute("ping", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, r, stressDuration) })
+	addRoute("", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, stressDuration) })
+	addRoute("ping", func(w http.ResponseWriter, r *http.Request) { pingHandler(w, stressDuration) })
 	addRoute("echo", echoHandler)
 	addRoute("health", healthHandler)
 	addRoute("healthcheck", createHealthcheckHandlerFunc(rc))
@@ -104,7 +104,7 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func pingHandler(w http.ResponseWriter, r *http.Request, stressDuration time.Duration) {
+func pingHandler(w http.ResponseWriter, stressDuration time.Duration) {
 	if stressDuration > 0 {
 		log.Printf("Stressing CPU for %s", stressDuration)
 		stressCpu(stressDuration)
@@ -150,7 +150,7 @@ func stressCpu(duration time.Duration) {
 				select {
 				case <-done:
 					return
-					//SA5004 intentionally ignored
+				//nolint:staticcheck // SA5004 intentionally ignored: spinning CPU for stress testing
 				default:
 				}
 			}
