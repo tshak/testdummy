@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -81,6 +83,7 @@ func main() {
 	addRoute("version", versionHandler)
 	addRoute("exit", exitHandler)
 	addRoute("status", statusHandler)
+	addRoute("chat", chatHandler)
 
 	if rc.EnableEnv {
 		logger.Println("WARNING: /env is enabled. This may expose sensitive information.")
@@ -196,6 +199,117 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(status)
+}
+
+func chatHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	tokens := 10
+	tokensParam := r.URL.Query().Get("tokens")
+	if tokensParam != "" {
+		tokensParsed, err := strconv.ParseInt(tokensParam, 10, 32)
+		if err == nil && tokensParsed > 0 {
+			tokens = int(tokensParsed)
+		}
+	}
+
+	sleepMs := 5
+	sleepParam := r.URL.Query().Get("sleep")
+	if sleepParam != "" {
+		sleepParsed, err := strconv.ParseInt(sleepParam, 10, 32)
+		if err == nil && sleepParsed >= 0 {
+			sleepMs = int(sleepParsed)
+		}
+	}
+
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	// List of random words to use as tokens
+	words := []string{
+		"Hello", " there", "!", " How", " can", " I", " assist", " you",
+		" today", "?", " I'm", " here", " to", " help", " with", " your",
+		" questions", ".", " Feel", " free", " to", " ask", " anything",
+	}
+
+	// OpenAI-style chat completion response
+	chatID := fmt.Sprintf("chatcmpl-%d", time.Now().Unix())
+	model := "testdummy-1.0"
+
+	// Stream random tokens in OpenAI format
+	for i := 0; i < tokens; i++ {
+		token := words[rand.Intn(len(words))]
+
+		chunk := map[string]interface{}{
+			"id":      chatID,
+			"object":  "chat.completion.chunk",
+			"created": time.Now().Unix(),
+			"model":   model,
+			"choices": []map[string]interface{}{
+				{
+					"index": 0,
+					"delta": map[string]interface{}{
+						"content": token,
+					},
+					"finish_reason": nil,
+				},
+			},
+		}
+
+		jsonData, err := json.Marshal(chunk)
+		if err != nil {
+			LogIfErr(err, "Error marshaling JSON")
+			return
+		}
+
+		_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
+		if err != nil {
+			LogIfErr(err, "Error writing to stream")
+			return
+		}
+		flusher.Flush()
+
+		if sleepMs > 0 && i < tokens-1 {
+			time.Sleep(time.Duration(sleepMs) * time.Millisecond)
+		}
+	}
+
+	// Send final chunk with finish_reason
+	finalChunk := map[string]interface{}{
+		"id":      chatID,
+		"object":  "chat.completion.chunk",
+		"created": time.Now().Unix(),
+		"model":   model,
+		"choices": []map[string]interface{}{
+			{
+				"index":         0,
+				"delta":         map[string]interface{}{},
+				"finish_reason": "stop",
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(finalChunk)
+	if err != nil {
+		LogIfErr(err, "Error marshaling final JSON")
+		return
+	}
+
+	_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
+	LogIfErr(err, "Error writing final chunk to stream")
+	flusher.Flush()
+
+	// Send [DONE] message
+	_, err = fmt.Fprintf(w, "data: [DONE]\n\n")
+	LogIfErr(err, "Error writing completion to stream")
+	flusher.Flush()
 }
 
 func LogIfErr(err error, message string) {
