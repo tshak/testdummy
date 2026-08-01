@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,10 +9,12 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -92,8 +95,30 @@ func main() {
 
 	logger.Printf("TestDummy %s", versionString)
 	logger.Printf("Listening on %s\n", rc.BindAddress)
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		ExitIfErr(err, "Unable to start server")
+
+	serverErr := make(chan error, 1)
+	go func() {
+		serverErr <- server.ListenAndServe()
+	}()
+
+	// On SIGTERM/SIGINT, stop accepting new connections but wait for in-flight
+	// handlers (e.g. long /chat streams) to finish before exiting.
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErr:
+		if err != http.ErrServerClosed {
+			ExitIfErr(err, "Unable to start server")
+		}
+	case sig := <-sigCh:
+		logger.Printf("Received %v; shutting down (waiting for in-flight requests)...", sig)
+		if err := server.Shutdown(context.Background()); err != nil {
+			LogIfErr(err, "Error during graceful shutdown")
+		}
+		if err := <-serverErr; err != http.ErrServerClosed {
+			ExitIfErr(err, "Error after shutdown")
+		}
 	}
 }
 
@@ -243,8 +268,13 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 	chatID := fmt.Sprintf("chatcmpl-%d", time.Now().Unix())
 	model := "testdummy-1.0"
 
-	// Stream random tokens in OpenAI format
+	// Stream random tokens in OpenAI format. Graceful Shutdown does not cancel
+	// the request context, so SIGTERM lets this finish; client disconnect does.
 	for i := 0; i < tokens; i++ {
+		if err := r.Context().Err(); err != nil {
+			return
+		}
+
 		token := words[rand.Intn(len(words))]
 
 		chunk := map[string]interface{}{
@@ -277,7 +307,11 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 		flusher.Flush()
 
 		if sleepMs > 0 && i < tokens-1 {
-			time.Sleep(time.Duration(sleepMs) * time.Millisecond)
+			select {
+			case <-r.Context().Done():
+				return
+			case <-time.After(time.Duration(sleepMs) * time.Millisecond):
+			}
 		}
 	}
 
