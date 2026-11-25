@@ -127,7 +127,7 @@ func envHandler(w http.ResponseWriter, r *http.Request) {
 	envSorted := os.Environ()
 	sort.Strings(envSorted)
 	for _, env := range envSorted {
-		_, err := w.Write([]byte(fmt.Sprintf("%s\n", env)))
+		_, err := fmt.Fprintf(w, "%s\n", env)
 		LogIfErr(err, "Error writing response to /env")
 	}
 }
@@ -160,7 +160,9 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func echoHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer func() {
+		LogIfErr(r.Body.Close(), "Error closing request body for /echo")
+	}()
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		bodyBytes = []byte(fmt.Sprintf("Unable to read body: %s", err))
@@ -179,6 +181,7 @@ func stressCpu(duration time.Duration) {
 				case <-done:
 					return
 				//nolint:staticcheck // SA5004 intentionally ignored: spinning CPU for stress testing
+				//lint:ignore SA5004 spinning CPU for stress testing
 				default:
 				}
 			}
