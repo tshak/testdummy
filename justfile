@@ -34,10 +34,10 @@ clean:
 tidy:
     go mod tidy
 
-# Run linters (requires staticcheck)
+# Run linters
 lint:
     go vet ./...
-    staticcheck ./...
+    go tool staticcheck ./...
 
 # Format code
 fmt:
